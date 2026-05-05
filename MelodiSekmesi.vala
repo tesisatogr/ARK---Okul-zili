@@ -53,7 +53,6 @@ public class MelodiSekmesi : GLib.Object {
             button_zili_durdur.clicked.connect (zili_sustur);
         }
 
-
         // Zilleri listeye doldur
         zilleri_yukle ();
 
@@ -125,7 +124,7 @@ public class MelodiSekmesi : GLib.Object {
         }
     }
 
-    // Zil çalma fonksiyonları (Daha önce yazdığımız gibi devam ediyor...)
+    // Zil çalma fonksiyonları 
     public void ogrenci_zili_baslat (bool ilk_zil = false) {
         string secilen = combo_ogrenci_zili_sec.get_active_id ();
         if (secilen == null) return;
@@ -141,9 +140,10 @@ public class MelodiSekmesi : GLib.Object {
             anons_yapilsin_mi = false;
         }
 
-        // Karara göre anons dosyasını ayarla (iptalse boş string kalır, anons çalmaz)
-        aktif_anons_dosyasi = anons_yapilsin_mi ? "/Sesler/ogrencianons.mp3" : "";
+        // Karara göre GÖMÜLÜ anons dosyasını ayarla
+        aktif_anons_dosyasi = anons_yapilsin_mi ? "resource:///org/ark/okulzili/Sesler/ogrencianons.mp3" : "";
         
+        // Zil dışarıdan klasörden okunmaya devam ediyor
         string yol = GLib.Environment.get_current_dir () + "/Sesler/Ziller/" + secilen;
         ses_motoru.cal (yol, aktif_adjustment);
     }
@@ -154,7 +154,9 @@ public class MelodiSekmesi : GLib.Object {
 
         anons_caliyor_mu = false;
         aktif_adjustment = adjustment5; // Öğretmen ayarını kullan
-        aktif_anons_dosyasi = checkbutton_ogretmen_anonslu.get_active () ? "/Sesler/ogretmenanons.mp3" : "";
+        
+        // GÖMÜLÜ anons dosyasını ayarla
+        aktif_anons_dosyasi = checkbutton_ogretmen_anonslu.get_active () ? "resource:///org/ark/okulzili/Sesler/ogretmenanons.mp3" : "";
         
         string yol = GLib.Environment.get_current_dir () + "/Sesler/Ziller/" + secilen;
         ses_motoru.cal (yol, aktif_adjustment);
@@ -181,8 +183,11 @@ public class MelodiSekmesi : GLib.Object {
     private void zil_bitti_kontrolu () {
         if (!anons_caliyor_mu && aktif_anons_dosyasi != "") {
             anons_caliyor_mu = true;
-            string yol = GLib.Environment.get_current_dir () + aktif_anons_dosyasi;
+            
+            // --- DÜZELTİLEN KISIM: Artık sadece resource adresini doğrudan kullanıyoruz ---
+            string yol = aktif_anons_dosyasi; 
             aktif_anons_dosyasi = ""; 
+            
             ses_motoru.cal (yol, aktif_adjustment); // Anonsu, zilin kendi ayarıyla çal
         } else {
             anons_caliyor_mu = false;
@@ -190,28 +195,28 @@ public class MelodiSekmesi : GLib.Object {
     }
 
     private void zilleri_yukle () {
-    string yol = GLib.Path.build_filename (GLib.Environment.get_current_dir (), "Sesler", "Ziller");
-    var klasor = GLib.File.new_for_path (yol);
+        string yol = GLib.Path.build_filename (GLib.Environment.get_current_dir (), "Sesler", "Ziller");
+        var klasor = GLib.File.new_for_path (yol);
 
-    try {
-        var enum_files = klasor.enumerate_children (GLib.FileAttribute.STANDARD_NAME, 0);
-        GLib.FileInfo info;
-        while ((info = enum_files.next_file ()) != null) {
-            if (info.get_name ().has_suffix (".mp3")) {
-                string isim = info.get_name ();
-                // append (ID, TEXT) -> ID olarak dosya adını veriyoruz
-                combo_ogrenci_zili_sec.append (isim, isim);
-                combo_ogretmen_zili_sec.append (isim, isim);
-                combo_cikis_zili_sec.append (isim, isim);
+        try {
+            var enum_files = klasor.enumerate_children (GLib.FileAttribute.STANDARD_NAME, 0);
+            GLib.FileInfo info;
+            while ((info = enum_files.next_file ()) != null) {
+                if (info.get_name ().has_suffix (".mp3")) {
+                    string isim = info.get_name ();
+                    // append (ID, TEXT) -> ID olarak dosya adını veriyoruz
+                    combo_ogrenci_zili_sec.append (isim, isim);
+                    combo_ogretmen_zili_sec.append (isim, isim);
+                    combo_cikis_zili_sec.append (isim, isim);
+                }
             }
+            // Eğer seçili ID ayarlar dosyasından gelmediyse ilk öğeyi seç
+            if (combo_ogrenci_zili_sec.get_active_id () == null) combo_ogrenci_zili_sec.set_active (0);
+            if (combo_ogretmen_zili_sec.get_active_id () == null) combo_ogretmen_zili_sec.set_active (0);
+            if (combo_cikis_zili_sec.get_active_id () == null) combo_cikis_zili_sec.set_active (0);
+            
+        } catch (GLib.Error e) {
+            GLib.printerr ("Hata: %s\n", e.message);
         }
-        // Eğer seçili ID ayarlar dosyasından gelmediyse ilk öğeyi seç
-        if (combo_ogrenci_zili_sec.get_active_id () == null) combo_ogrenci_zili_sec.set_active (0);
-        if (combo_ogretmen_zili_sec.get_active_id () == null) combo_ogretmen_zili_sec.set_active (0);
-        if (combo_cikis_zili_sec.get_active_id () == null) combo_cikis_zili_sec.set_active (0);
-        
-    } catch (GLib.Error e) {
-        GLib.printerr ("Hata: %s\n", e.message);
     }
-}
 }
