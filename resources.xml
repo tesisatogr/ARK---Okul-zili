@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/ark/okulzili">
+    <!-- Arayüz ve Görseller -->
+    <file>main_ui.glade</file>
+    <file>okul.jpg</file>
+    <file>sadik.jpeg</file>
+    <file>kerim.jpeg</file>
+    <file>ark.svg</file>
+    
+    <!-- Sabit ve Acil Durum Sesleri (Sesler klasörünün içinde olduklarını varsayıyoruz) -->
+    <file>Sesler/Resmi/istiklal.mp3</file>
+    <file>Sesler/Resmi/saygi.mp3</file>
+    <file>Sesler/Resmi/siren.mp3</file>
+    <file>Sesler/ogrencianons.mp3</file>
+    <file>Sesler/ogretmenanons.mp3</file>
+    <!-- Zillerini de gömmek istersen buraya ekleyebilirsin: -->
+    <!-- <file>Sesler/ogrenci_zili.mp3</file> -->
+  </gresource>
+</gresources>
