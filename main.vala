@@ -7,9 +7,10 @@ void main (string[] args) {
 
     var builder = new Builder ();
     try {
-        builder.add_from_file ("main_ui.glade");
+        // İŞTE SİHİRLİ DEĞİŞİKLİK BURADA: Artık file değil, resource!
+        builder.add_from_resource ("/org/ark/okulzili/main_ui.glade");
     } catch (GLib.Error e) {
-        GLib.printerr ("Kritik Hata: Arayüz dosyası bulunamadı! Detay: %s\n", e.message);
+        GLib.printerr ("Kritik Hata: Gömülü arayüz yüklenemedi! Detay: %s\n", e.message);
         return; // Dosya yoksa programı güvenlice kapat
     }
 

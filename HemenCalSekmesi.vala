@@ -19,6 +19,7 @@ public class HemenCalSekmesi : GLib.Object {
     private Label label_gun;
     private Label label_kalan_sure_normal;
     private Label label_kalan_sure_cuma;
+    
     // Yeni Kapatma Kontrolleri
     private CheckButton checkbutton_poweroff;
     private SpinButton spinbutton_poweroff_saat;
@@ -54,7 +55,6 @@ public class HemenCalSekmesi : GLib.Object {
         label_kalan_sure_normal = builder.get_object ("label_kalan_sure_normal") as Label;
         label_kalan_sure_cuma = builder.get_object ("label_kalan_sure_cuma") as Label;
 
-
         // --- Kapatma Nesnelerini Çekiyoruz ---
         checkbutton_poweroff = builder.get_object ("checkbutton_poweroff") as CheckButton;
         spinbutton_poweroff_saat = builder.get_object ("spinbutton_poweroff_saat") as SpinButton;
@@ -65,16 +65,17 @@ public class HemenCalSekmesi : GLib.Object {
         button_ogretmen_zili_cal.clicked.connect (() => melodi_hedefi.ogretmen_zili_baslat ());
         button_cikis_zili_cal.clicked.connect (() => melodi_hedefi.cikis_zili_baslat ());
 
+        // --- GÖMÜLÜ SESLER İÇİN YOL GÜNCELLEMELERİ ---
         button_istiklal_cal.clicked.connect (() => {
-            ses_motoru.cal (GLib.Environment.get_current_dir () + "/Sesler/Resmi/istiklal.mp3", adjustment1);
+            ses_motoru.cal ("resource:///org/ark/okulzili/Sesler/Resmi/istiklal.mp3", adjustment1);
         });
 
         button_saygi_cal.clicked.connect (() => {
-            ses_motoru.cal (GLib.Environment.get_current_dir () + "/Sesler/Resmi/saygi.mp3", adjustment2);
+            ses_motoru.cal ("resource:///org/ark/okulzili/Sesler/Resmi/saygi.mp3", adjustment2);
         });
 
         button_siren_cal.clicked.connect (() => {
-            ses_motoru.cal (GLib.Environment.get_current_dir () + "/Sesler/Resmi/siren.mp3", adjustment3);
+            ses_motoru.cal ("resource:///org/ark/okulzili/Sesler/Resmi/siren.mp3", adjustment3);
         });
 
         button_durdur.clicked.connect (() => melodi_hedefi.zili_sustur ());
@@ -83,50 +84,44 @@ public class HemenCalSekmesi : GLib.Object {
         GLib.Timeout.add_seconds (1, saniyelik_dongu);
     }
 
-   private bool saniyelik_dongu () {
-    var simdi = new DateTime.now_local ();
-    int gun_no = simdi.get_day_of_week (); // 1: Pazartesi ... 5: Cuma
-    if (gun_no == 5) {
-        // CUMA GÜNÜ: Cuma kutularını tara!
-        zaman_yoneticisi.cuma_saatlerini_denetle (simdi);
-        zaman_yoneticisi.kalan_sureyi_guncelle (simdi, true, label_kalan_sure_cuma); 
-    } else {
-        // DİĞER GÜNLER: Normal saatleri kontrol et
-        zaman_yoneticisi.normal_saatleri_denetle (simdi);
-        zaman_yoneticisi.kalan_sureyi_guncelle (simdi, false, label_kalan_sure_normal);
-    }
-
-    label_saat.set_text (simdi.format ("%H:%M:%S"));
-    
-    // label_gun -> 24 Nisan 2026 Cuma
-    // Not: %A tam gün adını, %B tam ay adını verir.
-    label_gun.set_text (simdi.format ("%d %B %Y %A"));
-
-    // 2. Bilgisayarı Kapatma Kontrolü
-    if (checkbutton_poweroff.get_active ()) {
-        int hedef_saat = (int) spinbutton_poweroff_saat.get_value ();
-        int hedef_dakika = (int) spinbutton_poweroff_dakika.get_value ();
-
-        // Saat, dakika eşleştiğinde ve saniye tam 00 olduğunda
-        if (simdi.get_hour () == hedef_saat && 
-            simdi.get_minute () == hedef_dakika && 
-            simdi.get_second () == 0) {
-            
-            bilgisayari_kapat ();
+    private bool saniyelik_dongu () {
+        var simdi = new DateTime.now_local ();
+        int gun_no = simdi.get_day_of_week (); // 1: Pazartesi ... 5: Cuma
+        
+        if (gun_no == 5) {
+            // CUMA GÜNÜ: Cuma kutularını tara!
+            zaman_yoneticisi.cuma_saatlerini_denetle (simdi);
+            zaman_yoneticisi.kalan_sureyi_guncelle (simdi, true, label_kalan_sure_cuma); 
+        } else {
+            // DİĞER GÜNLER: Normal saatleri kontrol et
+            zaman_yoneticisi.normal_saatleri_denetle (simdi);
+            zaman_yoneticisi.kalan_sureyi_guncelle (simdi, false, label_kalan_sure_normal);
         }
-    }
 
-    return true; // Döngünün saniyede bir çalışmaya devam etmesi için şart
-}
+        label_saat.set_text (simdi.format ("%H:%M:%S"));
+        label_gun.set_text (simdi.format ("%d %B %Y %A"));
+
+        // 2. Bilgisayarı Kapatma Kontrolü
+        if (checkbutton_poweroff.get_active ()) {
+            int hedef_saat = (int) spinbutton_poweroff_saat.get_value ();
+            int hedef_dakika = (int) spinbutton_poweroff_dakika.get_value ();
+
+            if (simdi.get_hour () == hedef_saat && 
+                simdi.get_minute () == hedef_dakika && 
+                simdi.get_second () == 0) {
+                bilgisayari_kapat ();
+            }
+        }
+
+        return true;
+    }
 
     private void bilgisayari_kapat () {
-    print ("Sistem yetki istemediği için direkt kapatılıyor...\n");
-    
-    try {
-        // Sistem kapatma komutunu kullan
-        Process.spawn_command_line_async ("/sbin/poweroff");
-    } catch (GLib.Error e) {
-        printerr ("Kapatma hatası: %s\n", e.message);
+        print ("Sistem yetki istemediği için direkt kapatılıyor...\n");
+        try {
+            Process.spawn_command_line_async ("/sbin/poweroff");
+        } catch (GLib.Error e) {
+            printerr ("Kapatma hatası: %s\n", e.message);
+        }
     }
-}
 }
