@@ -11,6 +11,8 @@ valac --pkg gtk+-3.0 --pkg gstreamer-1.0 main.vala SesMotoru.vala MelodiSekmesi.
 
 komutunu kullanın.
 
+Pardus XFCE için Oturum ve Başlangıç ayarlarında aşağıdaki komutu kullanarak uygulamayı ekleyin:
+sh -c "sleep 30 && cd ~/Masaüstü/ARK && ./okul_zili"
 
 
 Eklemek istediğiniz zil sesini Sesler dizini altındaki Ziller dizinine ekleyebilirsiniz.
