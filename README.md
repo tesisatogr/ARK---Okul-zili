@@ -21,5 +21,5 @@ sh -c "sleep 30 && cd ~/Masaüstü/ARK && ./okul_zili"
 
 Eklemek istediğiniz zil sesini Sesler dizini altındaki Ziller dizinine ekleyebilirsiniz.
 Sesler dizini altındaki Melodiler ve Melodiler_cuma dizinlerine teneffüslerde çalınacak müzikleri yükleyebilirsiniz.
-ayarlar.ini dosyasına programda yapılan değişiklikler kaydedilmektedir. Programı yeniden başlattığınızda bu dosyadaki
-bilgilere göre yapmış olduğunuz saat, melodi ve ses seviyesi gibi değişiklikler bu dosyadan çağırılmaktadır.
+~/.config/ARK-okul-zili/ayarlar.conf dosyasına programda yapılan değişiklikler kaydedilmektedir. Programı yeniden başlattığınızda bu dosyadaki
+bilgilere göre yapmış olduğunuz saat, melodi ve ses seviyesi gibi ayarlar çağırılmaktadır.
