@@ -1,3 +1,12 @@
+### 📸 Ekran Görüntüleri
+
+![Hemen_Çal](Ekran_goruntuleri/Ekran görüntüsü_2026-05-07_01-06-50.png)
+
+![Melodi ve Ses Ayarları](Ekran_goruntuleri/ayarlar.png)
+
+
+
+
 # ARK-Okul-zili
 GNU/Linux sistemler için okul zili uygulaması
 
