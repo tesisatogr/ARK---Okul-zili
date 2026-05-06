@@ -15,13 +15,7 @@ public class ZamanYonetici : GLib.Object {
     private Entry[] cuma_ogretmen = new Entry[16];
     private Entry[] cuma_cikis = new Entry[16];
 
-    // --- YENİ EKLENEN KAYIT BİLEŞENLERİ ---
-    private CheckButton checkbutton_poweroff;
-    private SpinButton spinbutton_poweroff_saat;
-    private SpinButton spinbutton_poweroff_dakika;
-    private Adjustment adjustment1; // İstiklal Marşı
-    private Adjustment adjustment2; // Saygı Duruşu
-    private Adjustment adjustment3; // Siren
+
 
     public ZamanYonetici (Builder builder, MelodiSekmesi melodi, MuzikYayiniSekmesi muzik) {
         this.melodi_hedefi = melodi;
@@ -43,14 +37,9 @@ public class ZamanYonetici : GLib.Object {
             cuma_ogretmen[i + 8] = builder.get_object ("cuma_ogle_ogretmen_%d".printf (i + 1)) as Entry;
             cuma_cikis[i + 8] = builder.get_object ("cuma_ogle_cikis_%d".printf (i + 1)) as Entry;
         }
-
-        // Güç ve Ses Bileşenlerini Çekme
-        checkbutton_poweroff = builder.get_object ("checkbutton_poweroff") as CheckButton;
-        spinbutton_poweroff_saat = builder.get_object ("spinbutton_poweroff_saat") as SpinButton;
-        spinbutton_poweroff_dakika = builder.get_object ("spinbutton_poweroff_dakika") as SpinButton;
-        adjustment1 = builder.get_object ("adjustment1") as Adjustment;
-        adjustment2 = builder.get_object ("adjustment2") as Adjustment;
-        adjustment3 = builder.get_object ("adjustment3") as Adjustment;
+		
+		ayarlari_yukle ();
+		
 
         // --- 2. SİNYALLERİ BAĞLAMA (OTOMATİK KAYIT) ---
         for (int i = 0; i < 16; i++) {
@@ -58,13 +47,6 @@ public class ZamanYonetici : GLib.Object {
             bagla_akilli_denetim (cuma_ogrenci[i]); bagla_akilli_denetim (cuma_ogretmen[i]); bagla_akilli_denetim (cuma_cikis[i]);
         }
 
-        // Güç ve Ses Değişikliklerini Takip Et
-        if (checkbutton_poweroff != null) checkbutton_poweroff.toggled.connect (ayarlari_kaydet);
-        if (spinbutton_poweroff_saat != null) spinbutton_poweroff_saat.value_changed.connect (ayarlari_kaydet);
-        if (spinbutton_poweroff_dakika != null) spinbutton_poweroff_dakika.value_changed.connect (ayarlari_kaydet);
-        if (adjustment1 != null) adjustment1.value_changed.connect (ayarlari_kaydet);
-        if (adjustment2 != null) adjustment2.value_changed.connect (ayarlari_kaydet);
-        if (adjustment3 != null) adjustment3.value_changed.connect (ayarlari_kaydet);
 
         // Temizle Butonları
         var btn_normal = builder.get_object ("button_saat_temizle") as Button;
@@ -72,7 +54,7 @@ public class ZamanYonetici : GLib.Object {
         var btn_cuma = builder.get_object ("button_cuma_saat_temizle") as Button;
         if (btn_cuma != null) btn_cuma.clicked.connect (cuma_saatlerini_temizle);
 
-        ayarlari_yukle ();
+        
     }
 
     private void bagla_akilli_denetim (Entry? kutu) {
@@ -110,74 +92,51 @@ public class ZamanYonetici : GLib.Object {
         return false;
     }
 
-    // --- AYARLARI KAYDETME VE YÜKLEME ---
-    public void ayarlari_kaydet () {
-        var kf = new KeyFile ();
-        string yol = Path.build_filename (Environment.get_current_dir (), "ayarlar.ini");
-        try { kf.load_from_file (yol, KeyFileFlags.NONE); } catch { }
+	public void ayarlari_kaydet () {
+        var ayar = AyarYoneticisi.instance (); // Merkezi yöneticiyi çağırıyoruz
 
         // 1. Saatleri Kaydet
         for (int i = 0; i < 8; i++) {
-            kf.set_string ("NormalSaatler", "Sabah_Ogrenci_%d".printf(i+1), tum_ogrenci[i].get_text ());
-            kf.set_string ("NormalSaatler", "Sabah_Ogretmen_%d".printf(i+1), tum_ogretmen[i].get_text ());
-            kf.set_string ("NormalSaatler", "Sabah_Cikis_%d".printf(i+1), tum_cikis[i].get_text ());
-            kf.set_string ("NormalSaatler", "Ogle_Ogrenci_%d".printf(i+1), tum_ogrenci[i+8].get_text ());
-            kf.set_string ("NormalSaatler", "Ogle_Ogretmen_%d".printf(i+1), tum_ogretmen[i+8].get_text ());
-            kf.set_string ("NormalSaatler", "Ogle_Cikis_%d".printf(i+1), tum_cikis[i+8].get_text ());
+            ayar.yaz_yazi ("NormalSaatler", "Sabah_Ogrenci_%d".printf(i+1), tum_ogrenci[i].get_text ());
+            ayar.yaz_yazi ("NormalSaatler", "Sabah_Ogretmen_%d".printf(i+1), tum_ogretmen[i].get_text ());
+            ayar.yaz_yazi ("NormalSaatler", "Sabah_Cikis_%d".printf(i+1), tum_cikis[i].get_text ());
+            ayar.yaz_yazi ("NormalSaatler", "Ogle_Ogrenci_%d".printf(i+1), tum_ogrenci[i+8].get_text ());
+            ayar.yaz_yazi ("NormalSaatler", "Ogle_Ogretmen_%d".printf(i+1), tum_ogretmen[i+8].get_text ());
+            ayar.yaz_yazi ("NormalSaatler", "Ogle_Cikis_%d".printf(i+1), tum_cikis[i+8].get_text ());
 
-            kf.set_string ("CumaSaatleri", "Sabah_Ogrenci_%d".printf(i+1), cuma_ogrenci[i].get_text ());
-            kf.set_string ("CumaSaatleri", "Sabah_Ogretmen_%d".printf(i+1), cuma_ogretmen[i].get_text ());
-            kf.set_string ("CumaSaatleri", "Sabah_Cikis_%d".printf(i+1), cuma_cikis[i].get_text ());
-            kf.set_string ("CumaSaatleri", "Ogle_Ogrenci_%d".printf(i+1), cuma_ogrenci[i+8].get_text ());
-            kf.set_string ("CumaSaatleri", "Ogle_Ogretmen_%d".printf(i+1), cuma_ogretmen[i+8].get_text ());
-            kf.set_string ("CumaSaatleri", "Ogle_Cikis_%d".printf(i+1), cuma_cikis[i+8].get_text ());
+            ayar.yaz_yazi ("CumaSaatleri", "Sabah_Ogrenci_%d".printf(i+1), cuma_ogrenci[i].get_text ());
+            ayar.yaz_yazi ("CumaSaatleri", "Sabah_Ogretmen_%d".printf(i+1), cuma_ogretmen[i].get_text ());
+            ayar.yaz_yazi ("CumaSaatleri", "Sabah_Cikis_%d".printf(i+1), cuma_cikis[i].get_text ());
+            ayar.yaz_yazi ("CumaSaatleri", "Ogle_Ogrenci_%d".printf(i+1), cuma_ogrenci[i+8].get_text ());
+            ayar.yaz_yazi ("CumaSaatleri", "Ogle_Ogretmen_%d".printf(i+1), cuma_ogretmen[i+8].get_text ());
+            ayar.yaz_yazi ("CumaSaatleri", "Ogle_Cikis_%d".printf(i+1), cuma_cikis[i+8].get_text ());
         }
 
-        // 2. Güç Ayarlarını Kaydet
-        if (checkbutton_poweroff != null) kf.set_boolean ("Sistem", "PowerOff_Aktif", checkbutton_poweroff.active);
-        if (spinbutton_poweroff_saat != null) kf.set_integer ("Sistem", "PowerOff_Saat", (int)spinbutton_poweroff_saat.value);
-        if (spinbutton_poweroff_dakika != null) kf.set_integer ("Sistem", "PowerOff_Dakika", (int)spinbutton_poweroff_dakika.value);
 
-        // 3. Özel Ses Seviyelerini Kaydet
-        if (adjustment1 != null) kf.set_double ("Sesler", "Istiklal_Ses", adjustment1.value);
-        if (adjustment2 != null) kf.set_double ("Sesler", "Saygi_Ses", adjustment2.value);
-        if (adjustment3 != null) kf.set_double ("Sesler", "Siren_Ses", adjustment3.value);
-
-        try { FileUtils.set_contents (yol, kf.to_data ()); } catch { }
+        ayar.kaydet (); // Bütün siparişleri verdik, şimdi tek seferde diske yaz diyoruz!
     }
 
     private void ayarlari_yukle () {
-        var kf = new KeyFile ();
-        string yol = Path.build_filename (Environment.get_current_dir (), "ayarlar.ini");
-        try {
-            kf.load_from_file (yol, KeyFileFlags.NONE);
-            for (int i = 0; i < 8; i++) {
-                if (tum_ogrenci[i] != null) tum_ogrenci[i].set_text (kf.get_string ("NormalSaatler", "Sabah_Ogrenci_%d".printf(i+1)));
-                if (tum_ogretmen[i] != null) tum_ogretmen[i].set_text (kf.get_string ("NormalSaatler", "Sabah_Ogretmen_%d".printf(i+1)));
-                if (tum_cikis[i] != null) tum_cikis[i].set_text (kf.get_string ("NormalSaatler", "Sabah_Cikis_%d".printf(i+1)));
-                if (tum_ogrenci[i+8] != null) tum_ogrenci[i+8].set_text (kf.get_string ("NormalSaatler", "Ogle_Ogrenci_%d".printf(i+1)));
-                if (tum_ogretmen[i+8] != null) tum_ogretmen[i+8].set_text (kf.get_string ("NormalSaatler", "Ogle_Ogretmen_%d".printf(i+1)));
-                if (tum_cikis[i+8] != null) tum_cikis[i+8].set_text (kf.get_string ("NormalSaatler", "Ogle_Cikis_%d".printf(i+1)));
+        var ayar = AyarYoneticisi.instance ();
+        
+        // try-catch bloklarına artık gerek yok, AyarYoneticisi bunu arkada hallediyor!
+        for (int i = 0; i < 8; i++) {
+            if (tum_ogrenci[i] != null) tum_ogrenci[i].set_text (ayar.oku_yazi ("NormalSaatler", "Sabah_Ogrenci_%d".printf(i+1), ""));
+            if (tum_ogretmen[i] != null) tum_ogretmen[i].set_text (ayar.oku_yazi ("NormalSaatler", "Sabah_Ogretmen_%d".printf(i+1), ""));
+            if (tum_cikis[i] != null) tum_cikis[i].set_text (ayar.oku_yazi ("NormalSaatler", "Sabah_Cikis_%d".printf(i+1), ""));
+            if (tum_ogrenci[i+8] != null) tum_ogrenci[i+8].set_text (ayar.oku_yazi ("NormalSaatler", "Ogle_Ogrenci_%d".printf(i+1), ""));
+            if (tum_ogretmen[i+8] != null) tum_ogretmen[i+8].set_text (ayar.oku_yazi ("NormalSaatler", "Ogle_Ogretmen_%d".printf(i+1), ""));
+            if (tum_cikis[i+8] != null) tum_cikis[i+8].set_text (ayar.oku_yazi ("NormalSaatler", "Ogle_Cikis_%d".printf(i+1), ""));
 
-                if (cuma_ogrenci[i] != null) cuma_ogrenci[i].set_text (kf.get_string ("CumaSaatleri", "Sabah_Ogrenci_%d".printf(i+1)));
-                if (cuma_ogretmen[i] != null) cuma_ogretmen[i].set_text (kf.get_string ("CumaSaatleri", "Sabah_Ogretmen_%d".printf(i+1)));
-                if (cuma_cikis[i] != null) cuma_cikis[i].set_text (kf.get_string ("CumaSaatleri", "Sabah_Cikis_%d".printf(i+1)));
-                if (cuma_ogrenci[i+8] != null) cuma_ogrenci[i+8].set_text (kf.get_string ("CumaSaatleri", "Ogle_Ogrenci_%d".printf(i+1)));
-                if (cuma_ogretmen[i+8] != null) cuma_ogretmen[i+8].set_text (kf.get_string ("CumaSaatleri", "Ogle_Ogretmen_%d".printf(i+1)));
-                if (cuma_cikis[i+8] != null) cuma_cikis[i+8].set_text (kf.get_string ("CumaSaatleri", "Ogle_Cikis_%d".printf(i+1)));
-            }
+            if (cuma_ogrenci[i] != null) cuma_ogrenci[i].set_text (ayar.oku_yazi ("CumaSaatleri", "Sabah_Ogrenci_%d".printf(i+1), ""));
+            if (cuma_ogretmen[i] != null) cuma_ogretmen[i].set_text (ayar.oku_yazi ("CumaSaatleri", "Sabah_Ogretmen_%d".printf(i+1), ""));
+            if (cuma_cikis[i] != null) cuma_cikis[i].set_text (ayar.oku_yazi ("CumaSaatleri", "Sabah_Cikis_%d".printf(i+1), ""));
+            if (cuma_ogrenci[i+8] != null) cuma_ogrenci[i+8].set_text (ayar.oku_yazi ("CumaSaatleri", "Ogle_Ogrenci_%d".printf(i+1), ""));
+            if (cuma_ogretmen[i+8] != null) cuma_ogretmen[i+8].set_text (ayar.oku_yazi ("CumaSaatleri", "Ogle_Ogretmen_%d".printf(i+1), ""));
+            if (cuma_cikis[i+8] != null) cuma_cikis[i+8].set_text (ayar.oku_yazi ("CumaSaatleri", "Ogle_Cikis_%d".printf(i+1), ""));
+        }
 
-            // Güç Ayarlarını Yükle
-            if (checkbutton_poweroff != null) checkbutton_poweroff.active = kf.get_boolean ("Sistem", "PowerOff_Aktif");
-            if (spinbutton_poweroff_saat != null) spinbutton_poweroff_saat.value = kf.get_integer ("Sistem", "PowerOff_Saat");
-            if (spinbutton_poweroff_dakika != null) spinbutton_poweroff_dakika.value = kf.get_integer ("Sistem", "PowerOff_Dakika");
 
-            // Ses Seviyelerini Yükle
-            if (adjustment1 != null) adjustment1.value = kf.get_double ("Sesler", "Istiklal_Ses");
-            if (adjustment2 != null) adjustment2.value = kf.get_double ("Sesler", "Saygi_Ses");
-            if (adjustment3 != null) adjustment3.value = kf.get_double ("Sesler", "Siren_Ses");
-
-        } catch { }
     }
 
     // --- DİĞER FONKSİYONLAR (Denetle, Tarayıcı vs. aynı kalıyor) ---

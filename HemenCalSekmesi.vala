@@ -1,7 +1,6 @@
 using Gtk;
 
 public class HemenCalSekmesi : GLib.Object {
-    // ... (Mevcut Butonlar ve Adjustmentlar) ...
     private Button button_ogrenci_zili_cal;
     private Button button_ogretmen_zili_cal;
     private Button button_cikis_zili_cal;
@@ -20,7 +19,7 @@ public class HemenCalSekmesi : GLib.Object {
     private Label label_kalan_sure_normal;
     private Label label_kalan_sure_cuma;
     
-    // Yeni Kapatma Kontrolleri
+    // Kapatma Kontrolleri
     private CheckButton checkbutton_poweroff;
     private SpinButton spinbutton_poweroff_saat;
     private SpinButton spinbutton_poweroff_dakika;
@@ -33,7 +32,7 @@ public class HemenCalSekmesi : GLib.Object {
 
     public HemenCalSekmesi (Builder builder, MelodiSekmesi hedef_sinif, SesMotoru motor, ZamanYonetici z_yonetici) {
         this.melodi_hedefi = hedef_sinif;
-        this.zaman_yoneticisi = z_yonetici; // Artık yeni yaratmıyor, main'den geleni alıyor
+        this.zaman_yoneticisi = z_yonetici; 
         this.ses_motoru = motor;
 
         // --- Mevcut Buton Bağlantıları ---
@@ -44,6 +43,11 @@ public class HemenCalSekmesi : GLib.Object {
         button_saygi_cal = builder.get_object ("button_saygi_cal") as Button;
         button_siren_cal = builder.get_object ("button_siren_cal") as Button;
         button_durdur = builder.get_object ("button_durdur") as Button;
+
+        // --- EKSİK OLAN KISIM: Ses Ayarlarını Glade'den Çekiyoruz ---
+        adjustment1 = builder.get_object ("adjustment1") as Adjustment;
+        adjustment2 = builder.get_object ("adjustment2") as Adjustment;
+        adjustment3 = builder.get_object ("adjustment3") as Adjustment;
 
         // --- Etiketleri (Label) Glade'den Çekiyoruz ---
         label_saat = builder.get_object ("label_saat") as Label;
@@ -78,20 +82,29 @@ public class HemenCalSekmesi : GLib.Object {
 
         button_durdur.clicked.connect (() => melodi_hedefi.zili_sustur ());
 
+        // --- EKSİK OLAN KISIM: Ayarları Yükle ve Değişimleri Dinle ---
+        ayarlari_yukle ();
+
+        if (checkbutton_poweroff != null) checkbutton_poweroff.toggled.connect (ayarlari_kaydet);
+        if (spinbutton_poweroff_saat != null) spinbutton_poweroff_saat.value_changed.connect (ayarlari_kaydet);
+        if (spinbutton_poweroff_dakika != null) spinbutton_poweroff_dakika.value_changed.connect (ayarlari_kaydet);
+        
+        if (adjustment1 != null) adjustment1.value_changed.connect (ayarlari_kaydet);
+        if (adjustment2 != null) adjustment2.value_changed.connect (ayarlari_kaydet);
+        if (adjustment3 != null) adjustment3.value_changed.connect (ayarlari_kaydet);
+
         // HER SANİYE SAATİ KONTROL ET
         GLib.Timeout.add_seconds (1, saniyelik_dongu);
     }
 
     private bool saniyelik_dongu () {
         var simdi = new DateTime.now_local ();
-        int gun_no = simdi.get_day_of_week (); // 1: Pazartesi ... 5: Cuma
+        int gun_no = simdi.get_day_of_week (); 
         
         if (gun_no == 5) {
-            // CUMA GÜNÜ: Cuma kutularını tara!
             zaman_yoneticisi.cuma_saatlerini_denetle (simdi);
             zaman_yoneticisi.kalan_sureyi_guncelle (simdi, true, label_kalan_sure_cuma); 
         } else {
-            // DİĞER GÜNLER: Normal saatleri kontrol et
             zaman_yoneticisi.normal_saatleri_denetle (simdi);
             zaman_yoneticisi.kalan_sureyi_guncelle (simdi, false, label_kalan_sure_normal);
         }
@@ -100,21 +113,20 @@ public class HemenCalSekmesi : GLib.Object {
         label_gun.set_text (simdi.format ("%d %B %Y %A"));
 
         // 2. Bilgisayarı Kapatma Kontrolü
-        if (checkbutton_poweroff.get_active ()) {
+        if (checkbutton_poweroff != null && checkbutton_poweroff.get_active ()) {
             int hedef_saat = (int) spinbutton_poweroff_saat.get_value ();
             int hedef_dakika = (int) spinbutton_poweroff_dakika.get_value ();
 
             if (simdi.get_hour () == hedef_saat && 
-            simdi.get_minute () == hedef_dakika && 
-            simdi.get_second () == 0) {
+                simdi.get_minute () == hedef_dakika && 
+                simdi.get_second () == 0) {
             
-            // DÜZELTME: Saniye 0 olsa bile aynı dakika içinde sadece 1 kez kapatma komutu yollar
-            if (son_kapatma_dakikasi != hedef_dakika) {
-                son_kapatma_dakikasi = hedef_dakika;
-                bilgisayari_kapat ();
+                if (son_kapatma_dakikasi != hedef_dakika) {
+                    son_kapatma_dakikasi = hedef_dakika;
+                    bilgisayari_kapat ();
+                }
             }
         }
-	}
 
         return true;
     }
@@ -126,5 +138,32 @@ public class HemenCalSekmesi : GLib.Object {
         } catch (GLib.Error e) {
             printerr ("Kapatma hatası: %s\n", e.message);
         }
+    }
+
+    // --- YENİ EKLENEN MERKEZİ AYAR YÖNETİMİ FONKSİYONLARI ---
+    private void ayarlari_kaydet () {
+        var ayar = AyarYoneticisi.instance ();
+        
+        if (checkbutton_poweroff != null) ayar.yaz_mantiksal ("Sistem", "PowerOff_Aktif", checkbutton_poweroff.active);
+        if (spinbutton_poweroff_saat != null) ayar.yaz_ondalik ("Sistem", "PowerOff_Saat", spinbutton_poweroff_saat.value);
+        if (spinbutton_poweroff_dakika != null) ayar.yaz_ondalik ("Sistem", "PowerOff_Dakika", spinbutton_poweroff_dakika.value);
+        
+        if (adjustment1 != null) ayar.yaz_ondalik ("Sesler", "Istiklal_Ses", adjustment1.value);
+        if (adjustment2 != null) ayar.yaz_ondalik ("Sesler", "Saygi_Ses", adjustment2.value);
+        if (adjustment3 != null) ayar.yaz_ondalik ("Sesler", "Siren_Ses", adjustment3.value);
+        
+        ayar.kaydet ();
+    }
+
+    private void ayarlari_yukle () {
+        var ayar = AyarYoneticisi.instance ();
+        
+        if (checkbutton_poweroff != null) checkbutton_poweroff.active = ayar.oku_mantiksal ("Sistem", "PowerOff_Aktif", false);
+        if (spinbutton_poweroff_saat != null) spinbutton_poweroff_saat.value = ayar.oku_ondalik ("Sistem", "PowerOff_Saat", 17.0);
+        if (spinbutton_poweroff_dakika != null) spinbutton_poweroff_dakika.value = ayar.oku_ondalik ("Sistem", "PowerOff_Dakika", 0.0);
+        
+        if (adjustment1 != null) adjustment1.value = ayar.oku_ondalik ("Sesler", "Istiklal_Ses", 50.0);
+        if (adjustment2 != null) adjustment2.value = ayar.oku_ondalik ("Sesler", "Saygi_Ses", 50.0);
+        if (adjustment3 != null) adjustment3.value = ayar.oku_ondalik ("Sesler", "Siren_Ses", 50.0);
     }
 }

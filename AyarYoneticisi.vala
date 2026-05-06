@@ -8,9 +8,9 @@ public class AyarYoneticisi : Object {
     private AyarYoneticisi () {
         kf = new KeyFile ();
         // Linux yapılandırma standardı: /home/kullanici/.config/okulzili/
-        string config_dir = Path.build_filename (Environment.get_user_config_dir (), "okulzili");
+        string config_dir = Path.build_filename (Environment.get_user_config_dir (), "ARK-okul-zili");
         DirUtils.create_with_parents (config_dir, 0755);
-        dosya_yolu = Path.build_filename (config_dir, "ayarlar.ini");
+        dosya_yolu = Path.build_filename (config_dir, "ayarlar.conf");
         
         try { kf.load_from_file (dosya_yolu, KeyFileFlags.NONE); } catch { }
     }

@@ -67,6 +67,8 @@ public class MelodiSekmesi : GLib.Object {
         checkbutton_ogrenci_anonslu.toggled.connect (ayarlari_kaydet);
         checkbutton_ogretmen_anonslu.toggled.connect (ayarlari_kaydet);
         
+        if (checkbutton_anons_yapma != null) checkbutton_anons_yapma.toggled.connect (ayarlari_kaydet);
+        
         // Ses seviyeleri değişince de kaydetmek istersen:
         adjustment4.value_changed.connect (ayarlari_kaydet);
         adjustment5.value_changed.connect (ayarlari_kaydet);
@@ -75,53 +77,42 @@ public class MelodiSekmesi : GLib.Object {
         ses_motoru.sarki_bitti.connect (zil_bitti_kontrolu);
     }
 
-    // --- AYARLARI KAYDETME FONKSİYONU ---
+    // --- YENİ VE GÜVENLİ: AYARLARI KAYDETME FONKSİYONU ---
     public void ayarlari_kaydet () {
-        var kf = new GLib.KeyFile ();
-        string dosya_yolu = GLib.Path.build_filename (GLib.Environment.get_current_dir (), "ayarlar.ini");
+        var ayar = AyarYoneticisi.instance ();
 
-        // Diğer sekmelerin ayarlarını bozmamak için önce mevcut dosyayı yüklemeyi dene
-        try { kf.load_from_file (dosya_yolu, GLib.KeyFileFlags.NONE); } catch { }
-
-        kf.set_string ("Melodiler", "OgrenciZili", combo_ogrenci_zili_sec.get_active_id () ?? "");
-        kf.set_string ("Melodiler", "OgretmenZili", combo_ogretmen_zili_sec.get_active_id () ?? "");
-        kf.set_string ("Melodiler", "CikisZili", combo_cikis_zili_sec.get_active_id () ?? "");
+        ayar.yaz_yazi ("Melodiler", "OgrenciZili", combo_ogrenci_zili_sec.get_active_id () ?? "");
+        ayar.yaz_yazi ("Melodiler", "OgretmenZili", combo_ogretmen_zili_sec.get_active_id () ?? "");
+        ayar.yaz_yazi ("Melodiler", "CikisZili", combo_cikis_zili_sec.get_active_id () ?? "");
         
-        kf.set_boolean ("Melodiler", "OgrenciAnons", checkbutton_ogrenci_anonslu.active);
-        kf.set_boolean ("Melodiler", "OgretmenAnons", checkbutton_ogretmen_anonslu.active);
+        ayar.yaz_mantiksal ("Melodiler", "OgrenciAnons", checkbutton_ogrenci_anonslu.active);
+        ayar.yaz_mantiksal ("Melodiler", "OgretmenAnons", checkbutton_ogretmen_anonslu.active);
         
-        kf.set_double ("Melodiler", "OgrenciSes", adjustment4.get_value ());
-        kf.set_double ("Melodiler", "OgretmenSes", adjustment5.get_value ());
-        kf.set_double ("Melodiler", "CikisSes", adjustment6.get_value ());
+        if (checkbutton_anons_yapma != null) ayar.yaz_mantiksal ("Melodiler", "IlkZilAnonsIptal", checkbutton_anons_yapma.active);
+        
+        ayar.yaz_ondalik ("Melodiler", "OgrenciSes", adjustment4.get_value ());
+        ayar.yaz_ondalik ("Melodiler", "OgretmenSes", adjustment5.get_value ());
+        ayar.yaz_ondalik ("Melodiler", "CikisSes", adjustment6.get_value ());
 
-        try {
-            GLib.FileUtils.set_contents (dosya_yolu, kf.to_data ());
-        } catch (GLib.Error e) {
-            GLib.printerr ("Ayarlar kaydedilemedi: %s\n", e.message);
-        }
+        ayar.kaydet (); // Tüm bilgileri yöneticiye verdik, o güvenlice kaydedecek!
     }
 
-    // --- AYARLARI YÜKLEME FONKSİYONU ---
+    // --- YENİ VE GÜVENLİ: AYARLARI YÜKLEME FONKSİYONU ---
     public void ayarlari_yukle () {
-        var kf = new GLib.KeyFile ();
-        string dosya_yolu = GLib.Path.build_filename (GLib.Environment.get_current_dir (), "ayarlar.ini");
+        var ayar = AyarYoneticisi.instance ();
 
-        try {
-            kf.load_from_file (dosya_yolu, GLib.KeyFileFlags.NONE);
-            
-            combo_ogrenci_zili_sec.set_active_id (kf.get_string ("Melodiler", "OgrenciZili"));
-            combo_ogretmen_zili_sec.set_active_id (kf.get_string ("Melodiler", "OgretmenZili"));
-            combo_cikis_zili_sec.set_active_id (kf.get_string ("Melodiler", "CikisZili"));
-            
-            checkbutton_ogrenci_anonslu.active = kf.get_boolean ("Melodiler", "OgrenciAnons");
-            checkbutton_ogretmen_anonslu.active = kf.get_boolean ("Melodiler", "OgretmenAnons");
-            
-            adjustment4.set_value (kf.get_double ("Melodiler", "OgrenciSes"));
-            adjustment5.set_value (kf.get_double ("Melodiler", "OgretmenSes"));
-            adjustment6.set_value (kf.get_double ("Melodiler", "CikisSes"));
-        } catch {
-            // Dosya yoksa veya okunamazsa varsayılanlarla devam eder
-        }
+        combo_ogrenci_zili_sec.set_active_id (ayar.oku_yazi ("Melodiler", "OgrenciZili"));
+        combo_ogretmen_zili_sec.set_active_id (ayar.oku_yazi ("Melodiler", "OgretmenZili"));
+        combo_cikis_zili_sec.set_active_id (ayar.oku_yazi ("Melodiler", "CikisZili"));
+        
+        checkbutton_ogrenci_anonslu.active = ayar.oku_mantiksal ("Melodiler", "OgrenciAnons", false);
+        checkbutton_ogretmen_anonslu.active = ayar.oku_mantiksal ("Melodiler", "OgretmenAnons", false);
+        
+        if (checkbutton_anons_yapma != null) checkbutton_anons_yapma.active = ayar.oku_mantiksal ("Melodiler", "IlkZilAnonsIptal", false);
+        
+        adjustment4.set_value (ayar.oku_ondalik ("Melodiler", "OgrenciSes", 50.0));
+        adjustment5.set_value (ayar.oku_ondalik ("Melodiler", "OgretmenSes", 50.0));
+        adjustment6.set_value (ayar.oku_ondalik ("Melodiler", "CikisSes", 50.0));
     }
 
     // Zil çalma fonksiyonları 
