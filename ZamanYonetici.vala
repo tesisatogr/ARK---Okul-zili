@@ -185,29 +185,31 @@ public class ZamanYonetici : GLib.Object {
     public void cuma_saatlerini_denetle (DateTime simdi) { saat_tarayici (simdi, cuma_ogrenci, cuma_ogretmen, cuma_cikis, true); }
     private void saat_tarayici (DateTime simdi, Entry[] ogrenci, Entry[] ogretmen, Entry[] cikis, bool cuma_mi) {
         int anlik_dakika = simdi.get_minute ();
+        
+        // 1. KORUMA KALKANI
         if (son_calan_dakika == anlik_dakika) return;
 
         for (int i = 0; i < 16; i++) {
             if (ogrenci[i] != null && saat_eslesiyor_mu (ogrenci[i].get_text (), simdi)) { 
-                muzik_hedefi.teneffus_bitti (); // Teneffüs bitti! Müziği kes
+                muzik_hedefi.teneffus_bitti (); 
                 melodi_hedefi.ogrenci_zili_baslat (i==0); 
                 son_calan_dakika = anlik_dakika; 
                 return; 
             }
             if (ogretmen[i] != null && saat_eslesiyor_mu (ogretmen[i].get_text (), simdi)) { 
-                muzik_hedefi.teneffus_bitti (); // Garanti olsun diye müziği kes
+                muzik_hedefi.teneffus_bitti (); 
                 melodi_hedefi.ogretmen_zili_baslat (); 
                 son_calan_dakika = anlik_dakika; 
                 return; 
             }
             if (cikis[i] != null && saat_eslesiyor_mu (cikis[i].get_text (), simdi)) { 
-                muzik_hedefi.teneffus_basladi (i, cuma_mi); // Teneffüs başladı! Müzik moduna gir
+                muzik_hedefi.teneffus_basladi (i, cuma_mi); 
                 melodi_hedefi.cikis_zili_baslat (); 
                 son_calan_dakika = anlik_dakika; 
                 return; 
             }
         }
-        if (son_calan_dakika != anlik_dakika) son_calan_dakika = -1;
+      
     }
     private bool saat_eslesiyor_mu (string deger, DateTime simdi) {
         if (deger == null || deger.strip () == "" || !deger.contains(":")) return false;

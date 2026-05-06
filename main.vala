@@ -20,10 +20,15 @@ void main (string[] args) {
     // 1. Önce tek bir bağımsız motor yarat!
     var merkez_motor = new SesMotoru ();
 
-    // 2. Motoru ilgili sekmelere ver (YENİ EKLENEN muzik_sekmesi)
+    // 2. Motoru ilgili sekmelere ver 
     var muzik_sekmesi = new MuzikYayiniSekmesi (builder, merkez_motor);
     var melodi_sekmesi = new MelodiSekmesi (builder, merkez_motor);
-    var hemen_cal_sekmesi = new HemenCalSekmesi (builder, melodi_sekmesi, merkez_motor, muzik_sekmesi);
+    
+    // 3. DÜZELTME: ZamanYonetici artık merkeze alındı!
+    var zaman_yoneticisi = new ZamanYonetici (builder, melodi_sekmesi, muzik_sekmesi);
+    
+    // 4. HemenCalSekmesi'ne muzik_sekmesi yerine zaman_yoneticisi'ni gönderiyoruz
+    var hemen_cal_sekmesi = new HemenCalSekmesi (builder, melodi_sekmesi, merkez_motor, zaman_yoneticisi);
 
     win.show_all ();
     Gtk.main ();

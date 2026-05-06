@@ -103,6 +103,7 @@ public class MuzikYayiniSekmesi : GLib.Object {
         if (hedef_dizi[index] != null && hedef_dizi[index].active) {
             su_an_teneffus_mu = true;
             su_an_cuma_mi = cuma_mi;
+            rastgele_sarki_cal_klasorden (su_an_cuma_mi);       
         }
     }
 

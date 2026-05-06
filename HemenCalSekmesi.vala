@@ -28,10 +28,12 @@ public class HemenCalSekmesi : GLib.Object {
     private MelodiSekmesi melodi_hedefi;
     private ZamanYonetici zaman_yoneticisi;
     private SesMotoru ses_motoru;
+    
+    private int son_kapatma_dakikasi = -1;
 
-    public HemenCalSekmesi (Builder builder, MelodiSekmesi hedef_sinif, SesMotoru motor, MuzikYayiniSekmesi muzik_hedefi) {
+    public HemenCalSekmesi (Builder builder, MelodiSekmesi hedef_sinif, SesMotoru motor, ZamanYonetici z_yonetici) {
         this.melodi_hedefi = hedef_sinif;
-        this.zaman_yoneticisi = new ZamanYonetici (builder, melodi_hedefi, muzik_hedefi);
+        this.zaman_yoneticisi = z_yonetici; // Artık yeni yaratmıyor, main'den geleni alıyor
         this.ses_motoru = motor;
 
         // --- Mevcut Buton Bağlantıları ---
@@ -42,10 +44,6 @@ public class HemenCalSekmesi : GLib.Object {
         button_saygi_cal = builder.get_object ("button_saygi_cal") as Button;
         button_siren_cal = builder.get_object ("button_siren_cal") as Button;
         button_durdur = builder.get_object ("button_durdur") as Button;
-
-        adjustment1 = builder.get_object ("adjustment1") as Adjustment;
-        adjustment2 = builder.get_object ("adjustment2") as Adjustment;
-        adjustment3 = builder.get_object ("adjustment3") as Adjustment;
 
         // --- Etiketleri (Label) Glade'den Çekiyoruz ---
         label_saat = builder.get_object ("label_saat") as Label;
@@ -107,11 +105,16 @@ public class HemenCalSekmesi : GLib.Object {
             int hedef_dakika = (int) spinbutton_poweroff_dakika.get_value ();
 
             if (simdi.get_hour () == hedef_saat && 
-                simdi.get_minute () == hedef_dakika && 
-                simdi.get_second () == 0) {
+            simdi.get_minute () == hedef_dakika && 
+            simdi.get_second () == 0) {
+            
+            // DÜZELTME: Saniye 0 olsa bile aynı dakika içinde sadece 1 kez kapatma komutu yollar
+            if (son_kapatma_dakikasi != hedef_dakika) {
+                son_kapatma_dakikasi = hedef_dakika;
                 bilgisayari_kapat ();
             }
         }
+	}
 
         return true;
     }

@@ -23,12 +23,12 @@ public class SesMotoru : GLib.Object {
         this.aktif_ayar = adj;
         
         // --- GÜR SES FORMÜLÜ UYGULANIYOR ---
-        // (Deger / 100) ile 0-1 arası oran bulunur, * 3.0 ile ses yükseltilir
-        double gurluk_orani = (adj.get_value () / 100.0) * 3.0;
+        // (Deger / 100) ile 0-1 arası oran bulunur, * 2.0 ile ses yükseltilir
+        double gurluk_orani = (adj.get_value () / 100.0) * 2.0;
         playbin.set ("volume", gurluk_orani);
 
         sinyal_id = adj.value_changed.connect (() => {
-            double dinamik_gur_ses = (adj.get_value () / 100.0) * 3.0;
+            double dinamik_gur_ses = (adj.get_value () / 100.0) * 2.0;
             playbin.set ("volume", dinamik_gur_ses);
         });
 
