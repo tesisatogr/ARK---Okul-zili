@@ -1,9 +1,8 @@
+# ARK-Okul-zili
 <img width="749" height="949" alt="Ekran görüntüsü_2026-05-07_01-06-50" src="https://github.com/user-attachments/assets/cffc3d18-a05c-4339-8dac-a93d76a84082" />
 <img width="749" height="949" alt="Ekran görüntüsü_2026-05-07_01-07-13" src="https://github.com/user-attachments/assets/825b2dd1-d11e-458b-8b84-be2d6f5f2af3" />
 <img width="749" height="949" alt="Ekran görüntüsü_2026-05-07_01-07-41" src="https://github.com/user-attachments/assets/9b7e37de-0402-4dba-b704-e7ba9f769b21" />
 
-
-# ARK-Okul-zili
 GNU/Linux sistemler için okul zili uygulaması
 
 Bağımlılıklar: libgtk-3-0, libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad
