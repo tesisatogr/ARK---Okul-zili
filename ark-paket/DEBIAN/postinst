@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# 1. Kullanıcıyı tespit et (Terminal ve Çift Tıklama Uyumlu)
+if [ -n "$SUDO_USER" ]; then
+    ASIL_KULLANICI=$SUDO_USER
+elif [ -n "$PKEXEC_UID" ]; then
+    ASIL_KULLANICI=$(getent passwd "$PKEXEC_UID" | cut -d: -f1)
+else
+    ASIL_KULLANICI=$(who | awk '{print $1}' | head -n1)
+fi
+
+EV_DIZINI=$(eval echo ~$ASIL_KULLANICI)
+
+# 2. Gerekli klasörleri oluştur
+mkdir -p $EV_DIZINI/ARK/Sesler/Melodiler
+mkdir -p $EV_DIZINI/ARK/Sesler/Melodiler_cuma
+mkdir -p $EV_DIZINI/ARK/Sesler/Ziller
+mkdir -p $EV_DIZINI/.local/share/applications
+mkdir -p $EV_DIZINI/.local/share/icons
+
+# 3. ESKİ KALINTILARI TEMİZLE (İki tane görünmesini engellemek için kritik adım)
+# Hem küçük harfli hem büyük harfli tüm eski kısayolları siliyoruz
+rm -f $EV_DIZINI/.local/share/applications/ark-okul-zili.desktop
+rm -f $EV_DIZINI/.local/share/applications/ARK-okul-zili.desktop
+
+# 4. Dosyaları yeni ve tertemiz halleriyle yerleştir
+cp /opt/ARK_temp/okul_zili $EV_DIZINI/ARK/
+cp -r /opt/ARK_temp/Sesler/* $EV_DIZINI/ARK/Sesler/
+cp /opt/ARK_temp/ark.svg $EV_DIZINI/.local/share/icons/
+cp /opt/ARK_temp/ARK-okul-zili.desktop $EV_DIZINI/.local/share/applications/
+
+# 5. Yolları ve İzinleri Düzenle
+sed -i "s|EV_DIZINI_YOLU|$EV_DIZINI|g" $EV_DIZINI/.local/share/applications/ARK-okul-zili.desktop
+chmod +x $EV_DIZINI/ARK/okul_zili
+chmod +x $EV_DIZINI/.local/share/applications/ARK-okul-zili.desktop
+
+# 6. Sahipliği asıl kullanıcıya ver (Şifresiz erişim için)
+chown -R $ASIL_KULLANICI:$ASIL_KULLANICI $EV_DIZINI/ARK
+chown $ASIL_KULLANICI:$ASIL_KULLANICI $EV_DIZINI/.local/share/icons/ark.svg
+chown $ASIL_KULLANICI:$ASIL_KULLANICI $EV_DIZINI/.local/share/applications/ARK-okul-zili.desktop
+
+# 7. MENÜYÜ TAZELE (Değişikliklerin anında görünmesi için)
+if command -v update-desktop-database &> /dev/null; then
+    sudo -u $ASIL_KULLANICI update-desktop-database $EV_DIZINI/.local/share/applications/
+fi
+
+# 8. Geçici dosyaları temizle
+rm -rf /opt/ARK_temp
+
+exit 0

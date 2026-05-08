@@ -1,0 +1,10 @@
+Package: ark-okul-zili
+Version: 1.0
+Section: utils
+Architecture: amd64
+Maintainer: tesisatogr <tesisatogr@gmail.com>
+Depends: libgtk-3-0, libglib2.0-0, libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav
+Homepage: https://github.com/tesisatogr/ARK-Okul-zili
+Licence: GPL-3.0
+Description: ARK Okul Zili Uygulaması
+ ARK Okul Zili Yönetim Sistemi.

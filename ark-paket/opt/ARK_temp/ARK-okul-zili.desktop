@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ARK Okul Zili
+Comment=Okul Zili Yönetim Sistemi
+Exec=EV_DIZINI_YOLU/ARK/okul_zili
+Path=EV_DIZINI_YOLU/ARK
+Icon=EV_DIZINI_YOLU/.local/share/icons/ark.svg
+Terminal=false
+Categories=Education;
