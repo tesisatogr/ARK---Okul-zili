@@ -1,4 +1,5 @@
 # ARK-Okul-zili
+# ark-paket.deb dosyasını indirerek bilgisayarınıza kurulumunu yapabilirsiniz.
 <img width="749" height="949" alt="Ekran görüntüsü_2026-05-07_01-06-50" src="https://github.com/user-attachments/assets/cffc3d18-a05c-4339-8dac-a93d76a84082" />
 <img width="749" height="949" alt="Ekran görüntüsü_2026-05-07_01-07-13" src="https://github.com/user-attachments/assets/825b2dd1-d11e-458b-8b84-be2d6f5f2af3" />
 <img width="749" height="949" alt="Ekran görüntüsü_2026-05-07_01-07-41" src="https://github.com/user-attachments/assets/9b7e37de-0402-4dba-b704-e7ba9f769b21" />
