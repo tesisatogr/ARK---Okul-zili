@@ -6,8 +6,6 @@
 
 GNU/Linux sistemler için okul zili uygulaması
 
-Bağımlılıklar: libgtk-3-0, libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad
-
 Derleyebilmek için mutlaka libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev paketleri de yüklü olmalı.
 
 Derlemek için:
