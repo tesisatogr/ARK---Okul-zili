@@ -28,7 +28,7 @@ void main (string[] args) {
     var zaman_yoneticisi = new ZamanYonetici (builder, melodi_sekmesi, muzik_sekmesi);
     
     // 4. HemenCalSekmesi'ne muzik_sekmesi yerine zaman_yoneticisi'ni gönderiyoruz
-    var hemen_cal_sekmesi = new HemenCalSekmesi (builder, melodi_sekmesi, merkez_motor, zaman_yoneticisi);
+    new HemenCalSekmesi (builder, melodi_sekmesi, merkez_motor, zaman_yoneticisi);
 
     win.show_all ();
     Gtk.main ();

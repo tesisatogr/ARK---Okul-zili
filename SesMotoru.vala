@@ -4,8 +4,12 @@ using Gtk;
 public class SesMotoru : GLib.Object {
     private Element playbin;
     public signal void sarki_bitti ();
-    private Adjustment? aktif_ayar = null; // Şu anki ses ayar düğmesini tutar
-    private ulong sinyal_id = 0;           // Sinyal bağlantısını temizlemek için
+    private Adjustment? aktif_ayar = null; 
+    private ulong sinyal_id = 0;           
+
+    // --- YENİ: KUYRUK SİSTEMİ HAFIZASI ---
+    public string? siradaki_ses = null;
+    public Adjustment? siradaki_ayar = null;
 
     public SesMotoru () {
         playbin = ElementFactory.make ("playbin", "merkezi_motor");
@@ -23,7 +27,6 @@ public class SesMotoru : GLib.Object {
         this.aktif_ayar = adj;
         
         // --- GÜR SES FORMÜLÜ UYGULANIYOR ---
-        // (Deger / 100) ile 0-1 arası oran bulunur, * 2.0 ile ses yükseltilir
         double gurluk_orani = (adj.get_value () / 100.0) * 2.0;
         playbin.set ("volume", gurluk_orani);
 
@@ -32,19 +35,16 @@ public class SesMotoru : GLib.Object {
             playbin.set ("volume", dinamik_gur_ses);
         });
 
-        // --- YENİ: AKILLI YOL (URI) YÖNLENDİRİCİSİ ---
+        // --- AKILLI YOL (URI) YÖNLENDİRİCİSİ ---
         string kusursuz_uri = "";
-        
-        // Gelen adres zaten 'resource://' veya 'file://' ile başlıyorsa hiç dokunma, aynen al
         if (dosya_yolu.has_prefix ("resource://") || dosya_yolu.has_prefix ("file://")) {
             kusursuz_uri = dosya_yolu;
         } else {
-            // Eğer normal bir klasör yoluysa (C:\... veya /home/...), GStreamer'ın anlayacağı dile çevir
             try {
                 kusursuz_uri = GLib.Filename.to_uri (dosya_yolu, null);
             } catch (GLib.Error e) {
                 printerr ("Dosya yolu hatası: %s\n", e.message);
-                return; // Hata çıkarsa fonksiyonu burada kes, program çökmesin
+                return; 
             }
         }
 
@@ -53,13 +53,25 @@ public class SesMotoru : GLib.Object {
     }
 
     public void durdur () {
+        // MANUEL DURDURMADA ZİNCİRİ KOPAR!
+        siradaki_ses = null;
+        siradaki_ayar = null;
         playbin.set_state (State.NULL);
     }
 
     private bool mesaj_yakala (Gst.Bus bus, Gst.Message mesaj) {
         if (mesaj.type == Gst.MessageType.EOS) {
-            durdur ();
-            sarki_bitti ();
+            // Şarkı bitti! Motoru durdurmadan önce sıradaki şarkıyı ve ayarını cebimize alalım
+            string? yedek_ses = siradaki_ses;
+            Adjustment? yedek_ayar = siradaki_ayar;
+            
+            durdur (); // DİKKAT: Bu fonksiyon siradaki_ses değişkenlerini sıfırlayacak
+            sarki_bitti (); // Arayüzdeki butonları normale döndüren sinyal
+            
+            // Eğer cebimizde bekleyen bir şarkı ve ayar varsa, vakit kaybetmeden ateşle!
+            if (yedek_ses != null && yedek_ayar != null) {
+                cal (yedek_ses, yedek_ayar);
+            }
         }
         return true;
     }

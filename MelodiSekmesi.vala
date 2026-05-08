@@ -185,29 +185,49 @@ public class MelodiSekmesi : GLib.Object {
         }
     }
 
-    private void zilleri_yukle () {
+private void zilleri_yukle () {
         string yol = GLib.Path.build_filename (GLib.Environment.get_current_dir (), "Sesler", "Ziller");
+        
+        if (!GLib.FileUtils.test (yol, GLib.FileTest.EXISTS)) {
+            GLib.DirUtils.create_with_parents (yol, 0755);
+        }
+
         var klasor = GLib.File.new_for_path (yol);
+
+        // 1. ADIM: Dosya isimlerini geçici olarak tutacağımız bir liste oluşturuyoruz
+        GLib.List<string> dosya_listesi = new GLib.List<string> ();
 
         try {
             var enum_files = klasor.enumerate_children (GLib.FileAttribute.STANDARD_NAME, 0);
             GLib.FileInfo info;
+            
             while ((info = enum_files.next_file ()) != null) {
-                if (info.get_name ().has_suffix (".mp3")) {
-                    string isim = info.get_name ();
-                    // append (ID, TEXT) -> ID olarak dosya adını veriyoruz
-                    combo_ogrenci_zili_sec.append (isim, isim);
-                    combo_ogretmen_zili_sec.append (isim, isim);
-                    combo_cikis_zili_sec.append (isim, isim);
+                string orijinal_isim = info.get_name ();
+                string kucuk_isim = orijinal_isim.down ();
+
+                // Format filtresinden geçenleri doğrudan ComboBox'a değil, listeye atıyoruz
+                if (kucuk_isim.has_suffix (".mp3") || kucuk_isim.has_suffix (".wav") || kucuk_isim.has_suffix (".ogg")) {
+                    dosya_listesi.append (orijinal_isim);
                 }
             }
-            // Eğer seçili ID ayarlar dosyasından gelmediyse ilk öğeyi seç
+            
+            // 2. ADIM: Listeyi "strcmp0" (standart metin karşılaştırma) fonksiyonu ile A'dan Z'ye sıralıyoruz
+            dosya_listesi.sort ((a, b) => a.collate (b));
+
+            // 3. ADIM: Sıralanmış listeyi sırayla ComboBox'ların içine yerleştiriyoruz
+            foreach (string isim in dosya_listesi) {
+                combo_ogrenci_zili_sec.append (isim, isim);
+                combo_ogretmen_zili_sec.append (isim, isim);
+                combo_cikis_zili_sec.append (isim, isim);
+            }
+            
+            // Ayarlardan gelen bir kayıt yoksa boş görünmemesi için ilk öğeyi (artık alfabetik olarak ilk sıradakini) seç
             if (combo_ogrenci_zili_sec.get_active_id () == null) combo_ogrenci_zili_sec.set_active (0);
             if (combo_ogretmen_zili_sec.get_active_id () == null) combo_ogretmen_zili_sec.set_active (0);
             if (combo_cikis_zili_sec.get_active_id () == null) combo_cikis_zili_sec.set_active (0);
             
         } catch (GLib.Error e) {
-            GLib.printerr ("Hata: %s\n", e.message);
+            GLib.printerr ("Ziller yüklenirken Hata: %s\n", e.message);
         }
     }
 }

@@ -78,11 +78,9 @@ public class ZamanYonetici : GLib.Object {
         bool gecerli = false;
         string[] parcalar = islenen.split (":");
         if (parcalar.length == 2) {
-            try {
                 int sa = int.parse (parcalar[0]);
                 int dk = int.parse (parcalar[1]);
                 if (sa >= 0 && sa <= 23 && dk >= 0 && dk <= 59) { kutu.set_text ("%02d:%02d".printf (sa, dk)); gecerli = true; }
-            } catch { gecerli = false; }
         }
 
         if (gecerli) context.remove_class ("error");

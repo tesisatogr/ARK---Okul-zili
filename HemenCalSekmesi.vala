@@ -73,6 +73,11 @@ public class HemenCalSekmesi : GLib.Object {
         });
 
         button_saygi_cal.clicked.connect (() => {
+            // 1. ADIM: Motorun hafızasına sıradaki marşı ve onun ses ayarını yüklüyoruz
+            ses_motoru.siradaki_ses = "resource:///org/ark/okulzili/Sesler/Resmi/istiklal.mp3";         
+            ses_motoru.siradaki_ayar = adjustment2; 
+            
+            // 2. ADIM: Saygı duruşunu da aynı ses seviyesiyle (adjustment2) çalarak zinciri başlatıyoruz
             ses_motoru.cal ("resource:///org/ark/okulzili/Sesler/Resmi/saygi.mp3", adjustment2);
         });
 
