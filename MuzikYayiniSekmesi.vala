@@ -118,32 +118,41 @@ public class MuzikYayiniSekmesi : GLib.Object {
         }
     }
 
-    // --- YENİ: KLASÖRÜ SADECE DEĞİŞTİĞİNDE TARAYAN AKILLI FONKSİYON ---
+	// --- GÜNCELLENMİŞ: HER BİLGİSAYARDA ÇALIŞAN AKILLI TARAYICI ---
     private void klasoru_denetle_ve_guncelle (bool cuma_klasoru) {
-        string klasor_adi = cuma_klasoru ? "Melodiler_cuma" : "Melodiler";
-        string tam_yol = Path.build_filename (Environment.get_current_dir (), "Sesler", klasor_adi);
+    string klasor_adi = cuma_klasoru ? "Melodiler_cuma" : "Melodiler";
+    
+    // ARTIK HİÇBİR ŞEYE GÜVENMİYORUZ, YOLU TEK SATIRDA ÇİVİLİYORUZ:
+    string tam_yol = GLib.Environment.get_home_dir() + "/ARK/Sesler/" + klasor_adi;
+    
+    // Terminale tam olarak nereye baktığını yazdıralım ki emin olalım:
+    print ("\n--- KLASÖR TARANIYOR --- \nBaktığım yer: %s\n", tam_yol);
         
         try {
             var klasor = File.new_for_path (tam_yol);
-            // Klasörün en son ne zaman değiştirildiğine bakıyoruz
+            if (!klasor.query_exists()) {
+                print ("Hata: Müzik klasörü bulunamadı: %s\n", tam_yol);
+                return;
+            }
+
             var info = klasor.query_info ("time::modified", FileQueryInfoFlags.NONE);
             uint64 mtime = info.get_attribute_uint64 ("time::modified");
 
             uint64 son_degisiklik = cuma_klasoru ? cuma_klasor_son_degisiklik : normal_klasor_son_degisiklik;
             var liste = cuma_klasoru ? cuma_sarki_listesi : normal_sarki_listesi;
 
-            // Eğer klasöre yeni şarkı atıldıysa VEYA liste henüz hiç oluşturulmadıysa (program yeni açıldıysa) tarama yap!
             if (liste == null || mtime != son_degisiklik) {
                 var yeni_liste = new GenericArray<string> ();
                 var enum_files = klasor.enumerate_children (FileAttribute.STANDARD_NAME, 0);
                 FileInfo f_info;
                 while ((f_info = enum_files.next_file ()) != null) {
-                    if (f_info.get_name ().has_suffix (".mp3")) {
+                    // Sadece küçük harf büyük harf duyarlılığına karşı .mp3 ve .MP3 kontrolü
+                    string dosya_adi = f_info.get_name ().down (); 
+                    if (dosya_adi.has_suffix (".mp3")) {
                         yeni_liste.add (Path.build_filename (tam_yol, f_info.get_name ()));
                     }
                 }
                 
-                // Güncel listeyi ve zamanı RAM'e (hafızaya) kaydet
                 if (cuma_klasoru) {
                     cuma_sarki_listesi = yeni_liste;
                     cuma_klasor_son_degisiklik = mtime;
@@ -152,32 +161,38 @@ public class MuzikYayiniSekmesi : GLib.Object {
                     normal_klasor_son_degisiklik = mtime;
                 }
             }
-        } catch { 
-            print ("Klasör okunamadı: %s\n", tam_yol); 
-            // Çökmemesi için boş liste ata
+        } catch (GLib.Error e) { 
+            print ("Klasör okunamadı: %s | Hata: %s\n", tam_yol, e.message); 
             if (cuma_klasoru && cuma_sarki_listesi == null) cuma_sarki_listesi = new GenericArray<string> ();
             if (!cuma_klasoru && normal_sarki_listesi == null) normal_sarki_listesi = new GenericArray<string> ();
         }
     }
 
     private void rastgele_sarki_cal_klasorden (bool cuma_klasoru) {
-        // Önce akıllı tarayıcıyı çalıştır (Değişiklik yoksa saniyesinde döner)
-        klasoru_denetle_ve_guncelle (cuma_klasoru);
-        
-        // Listeyi RAM'den (Önbellekten) al
-        var liste = cuma_klasoru ? cuma_sarki_listesi : normal_sarki_listesi;
+    klasoru_denetle_ve_guncelle (cuma_klasoru);
+    
+    var liste = cuma_klasoru ? cuma_sarki_listesi : normal_sarki_listesi;
 
-        if (liste != null && liste.length > 0) {
-            int rastgele_index = Random.int_range (0, liste.length);
-            string secilen_sarki = liste[rastgele_index];
-            ses_motoru.cal (secilen_sarki, adjustment7);
-
-            if (label_calinan_sarki != null) {
-                string sarki_adi = Path.get_basename (secilen_sarki).replace (".mp3", "");
-                label_calinan_sarki.set_text ("Şu an çalan şarkı:\n" + sarki_adi);
-            }
-        }
+    // TERMINAL KONTROLU (Sorunu anlamak için buraya bakacağız)
+    if (liste != null) {
+        print ("Tarama bitti. Bulunan şarkı sayısı: %d\n", liste.length);
     }
+
+    if (liste != null && liste.length > 0) {
+        int rastgele_index = Random.int_range (0, liste.length);
+        string secilen_sarki = liste[rastgele_index];
+        
+        // Ses motoruna gönder
+        ses_motoru.cal (secilen_sarki, adjustment7);
+
+        if (label_calinan_sarki != null) {
+            string sarki_adi = Path.get_basename (secilen_sarki).replace (".mp3", "").replace(".MP3", "");
+            label_calinan_sarki.set_text ("Şu an çalan şarkı:\n" + sarki_adi);
+        }
+    } else {
+        print ("HATA: Oynatılacak şarkı bulunamadı! Klasör boş mu?\n");
+    }
+}
 
     // --- YENİ: AYAR YÖNETİCİSİ ENTEGRASYONU (Yarış Koşulu Çözüldü) ---
     public void ayarlari_kaydet () {
