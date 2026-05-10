@@ -20,7 +20,7 @@ ile programı oluştur.
 
 Pardus XFCE için Oturum ve Başlangıç ayarlarında aşağıdaki komutu kullanarak uygulamayı ekleyin:
 
-sh -c "sleep 30 && cd ~/Masaüstü/ARK && ./okul_zili"
+sh -c "sleep 30 && cd ~/ARK && ./okul_zili"
 
 Eklemek istediğiniz zil sesini Sesler dizini altındaki Ziller dizinine ekleyebilirsiniz.
 Sesler dizini altındaki Melodiler ve Melodiler_cuma dizinlerine teneffüslerde çalınacak müzikleri yükleyebilirsiniz.
